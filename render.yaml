@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: plataformaescolar-api
+    runtime: node
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        sync: false # Set manually in Render dashboard
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: "24h"
+      - key: NODE_ENV
+        value: production
+      - key: CORS_ORIGIN
+        sync: false # Set to your frontend URL, e.g. https://your-frontend.onrender.com
