@@ -5,6 +5,8 @@ services:
     buildCommand: npm ci && npx prisma generate && npm run build
     startCommand: npm start
     envVars:
+      - key: NPM_CONFIG_PRODUCTION
+        value: "false"
       - key: DATABASE_URL
         sync: false # Set manually in Render dashboard
       - key: JWT_SECRET
