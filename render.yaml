@@ -2,9 +2,11 @@ services:
   - type: web
     name: plataformaescolar-api
     runtime: node
-    buildCommand: npm ci && npx prisma generate && npm run build
+    buildCommand: npm ci && npx prisma generate && npm run build && ls -la dist/
     startCommand: npm start
     envVars:
+      - key: NODE_VERSION
+        value: "20.18.0"
       - key: NPM_CONFIG_PRODUCTION
         value: "false"
       - key: DATABASE_URL
