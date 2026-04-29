@@ -1,0 +1,132 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enum para los roles de usuario
+enum Role {
+  DIRECTIVO
+  SECRETARIO
+  PRECEPTOR
+  DOCENTE
+  ALUMNO
+}
+
+// Enum para los turnos
+enum Turno {
+  MANANA
+  TARDE
+  NOCHE
+}
+
+// Enum para los períodos de calificación
+enum Periodo {
+  PRIMER_TRIMESTRE
+  SEGUNDO_TRIMESTRE
+  TERCER_TRIMESTRE
+  FINAL
+}
+
+// Modelo de Usuario
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  nombre    String
+  apellido  String
+  dni       String   @unique
+  role      Role
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  materiasAsignadas Subject[]    @relation("DocenteMateria")
+  inscripciones     Enrollment[] @relation("AlumnoInscripcion")
+  calificaciones    Grade[]      @relation("AlumnoCalificacion")
+
+  @@map("users")
+}
+
+// Modelo de Curso
+model Course {
+  id        String   @id @default(uuid())
+  nombre    String   // Ej: "1°A", "2°B"
+  anio      Int      // Año lectivo
+  turno     Turno
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  materias     Subject[]
+  inscripciones Enrollment[]
+
+  @@unique([nombre, anio])
+  @@map("courses")
+}
+
+// Modelo de Materia
+model Subject {
+  id        String   @id @default(uuid())
+  nombre    String
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  cursoId   String
+  curso     Course   @relation(fields: [cursoId], references: [id])
+  docenteId String?
+  docente   User?    @relation("DocenteMateria", fields: [docenteId], references: [id])
+  
+  calificaciones Grade[]
+
+  @@unique([nombre, cursoId])
+  @@map("subjects")
+}
+
+// Modelo de Inscripción (Alumno en Curso)
+model Enrollment {
+  id        String   @id @default(uuid())
+  anio      Int      // Año de inscripción
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  alumnoId  String
+  alumno    User     @relation("AlumnoInscripcion", fields: [alumnoId], references: [id])
+  cursoId   String
+  curso     Course   @relation(fields: [cursoId], references: [id])
+
+  @@unique([alumnoId, cursoId, anio])
+  @@map("enrollments")
+}
+
+// Modelo de Calificación
+model Grade {
+  id           String   @id @default(uuid())
+  nota         Float    // Nota de 0 a 10
+  periodo      Periodo
+  fecha        DateTime @default(now())
+  observaciones String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relaciones
+  alumnoId    String
+  alumno      User     @relation("AlumnoCalificacion", fields: [alumnoId], references: [id])
+  materiaId   String
+  materia     Subject  @relation(fields: [materiaId], references: [id])
+
+  @@unique([alumnoId, materiaId, periodo])
+  @@map("grades")
+}
